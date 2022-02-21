@@ -1,37 +1,126 @@
-import Information from "features/login/Information";
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
+import PropTypes from "prop-types";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
-export function Login() {
-  const submitHandler = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+//Images
+import LaLigaImg from "assets/laliga-logo.png";
+import PlayersImg from "assets/iniesta.jpg";
+
+type LoginProps = {
+  tokenIsValid: boolean;
+  isItAuthenticated: boolean;
+  checkUserLogin: (userInput: object) => void;
+  checkTokenLogin: () => void;
+};
+
+export function Login({
+  tokenIsValid,
+  isItAuthenticated,
+  checkUserLogin,
+  checkTokenLogin
+}: LoginProps) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm();
+  let navigate = useNavigate();
+
+  useEffect(() => {
+    checkTokenLogin && localStorage.getItem("LaLiga") && checkTokenLogin();
+    console.log(tokenIsValid);
+    if (tokenIsValid) navigate("/");
+    isItAuthenticated === true && navigate("/");
+  }, [tokenIsValid, isItAuthenticated, navigate]);
+
+  const onFormSubmit = (userInput) => {
+    checkUserLogin(userInput);
   };
+
   return (
-    <Container>
-      <Information />
-      <Form onSubmit={submitHandler}>
-        <label>La Liga</label>
-        <InputContainer>
-          <InputLable htmlFor="loginUserName" className="form--lable">
-            User name or Email
-          </InputLable>
-          <Input type="email" id="loginUserName" required />
-          <InputLable htmlFor="loginInput" className="form--lable">
-            Password
-          </InputLable>
-          <Input type="password" id="loginPassword" required />
-          <RecoverPassword>Forgot Password?</RecoverPassword>
-          <SubmitBtn type="submit" className="form--button" value="LogIn" />
-        </InputContainer>
-        <OtherOptions>
-          <OrMessage>Or</OrMessage>
-          <button>Google</button>
-          <SignInLink></SignInLink>
-        </OtherOptions>
-      </Form>
-    </Container>
+    <Section>
+      <Container>
+        <Information />
+        <Form
+          onSubmit={handleSubmit((userInput) => {
+            checkUserLogin(userInput);
+          })}
+        >
+          <h4> "email": eve.holt@reqres.in, "password": cityslicka</h4>
+          <LaLigaLogo src={LaLigaImg} alt="la liga logo" />
+          {/* !!!! isLoginInvalid */}
+          {/* <div>
+            {isItAuthenticated === false && isItAuthenticated === false && (
+              <ErrorInput>The user doesnt exist</ErrorInput>
+            )}
+          </div> */}
+          <InputContainer>
+            {/* Email */}
+            <InputLable htmlFor="loginUserName" className="form--lable">
+              Email
+            </InputLable>
+            <Input
+              type="email"
+              id="loginUserName"
+              {...register("email", {
+                required: {
+                  value: true,
+                  message: "Se requiere el email"
+                },
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: "El email no es valido"
+                }
+              })}
+            />
+            <ErrorInput>
+              {errors.email && <span>{errors.email.message}</span>}
+            </ErrorInput>
+
+            {/* password */}
+            <InputLable htmlFor="loginInput" className="form--lable">
+              Password
+            </InputLable>
+            <Input
+              type="password"
+              id="loginPassword"
+              autoComplete="true"
+              {...register("password", {
+                required: {
+                  value: true,
+                  message: "Se requiere una contraseña"
+                },
+                // pattern: {
+                //   value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/,
+                //   message: "La contraseño no es valida"
+                // },
+                minLength: {
+                  value: 10,
+                  message:
+                    "La contraseña debe de tener un minimo de 10 caracteres"
+                }
+              })}
+            />
+            <ErrorInput>
+              {errors.password && <span>{errors.password.message}</span>}
+            </ErrorInput>
+            <RecoverPassword>Forgot Password?</RecoverPassword>
+            {/* submit button */}
+            <SubmitBtn type="submit" className="form--button" value="LogIn" />
+          </InputContainer>
+          <SignInLink>Sign Up</SignInLink>
+        </Form>
+      </Container>
+    </Section>
   );
 }
+const Section = styled.section`
+  background-color: #25282a;
+  width: 100vw;
+  height: 100vh;
+`;
 const Container = styled.div`
   position: absolute;
   top: 50%;
@@ -41,16 +130,29 @@ const Container = styled.div`
   flex-flow: row nowrap;
   height: 60vh;
   width: 60vw;
+  background-color: white;
+  border-radius: 7px;
+`;
+
+const Information = styled.div`
+  width: 55%;
+  height: 100%;
+  background: url(${PlayersImg}) no-repeat center center;
+  background-size: cover;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-around;
   width: 45%;
   height: 100%;
-  padding: 40px;
+  padding: 20px;
+`;
+const LaLigaLogo = styled.img`
+  height: auto;
+  width: 150px;
 `;
 
 const InputContainer = styled.div`
@@ -77,44 +179,31 @@ const Input = styled.input`
   outline: none;
   border-spacing: 0px;
   border-collapse: separate;
+  &:focus {
+    border-color: blueviolet;
+  }
+`;
+
+const ErrorInput = styled.div`
+  height: 50px;
+  font-size: 20px;
+  color: red;
 `;
 
 const RecoverPassword = styled.h6`
   margin-left: auto;
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 `;
 
 const SubmitBtn = styled.input`
-  width: 250px;
-  height: 60px;
+  width: 220px;
+  height: 50px;
   border-radius: 50px;
 `;
 
-const OtherOptions = styled.div`
-  height: max;
+const SignInLink = styled.button`
   width: 100%;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  justify-content: center;
+  height: 50px;
+  padding: 5px 10px;
+  border-radius: 7px;
 `;
-const OrMessage = styled.span`
-  width: 100%;
-  padding: 0px 0.5rem;
-  background-color: white;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-  display: inline-block;
-  &:after {
-    border: 1px solid black;
-    content: "";
-    display: block;
-    position: absolute;
-    top: 50%;
-    width: 100%;
-    z-index: -1;
-    border-radius: 20px;
-  }
-`;
-const SignInLink = styled.h6``;
